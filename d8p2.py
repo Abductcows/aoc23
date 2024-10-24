@@ -1,9 +1,21 @@
+import math
+from functools import reduce
+
+
 def get_index(direction):
     if direction == 'L':
         return 0
     if direction == 'R':
         return 1
     raise ValueError(f'what the hell is a {direction}?')
+
+
+def lcm(a, b):
+    return abs(a * b) // math.gcd(a, b)
+
+
+def lcm_of_iterable(numbers):
+    return reduce(lcm, numbers)
 
 
 def run(filename):
@@ -17,38 +29,24 @@ def run(filename):
         vals = [val.strip() for val in line.split('=')[1].strip().strip('(').strip(')').split(',')]
         transitions[key] = vals
 
-    result = 0
     start_nodes = [key for key in transitions if key[-1] == 'A']
     print(start_nodes)
 
+    result = []
+    min_steps = 1
 
-    min_steps, max_steps = 1, 1
-    while True:
-        for start_node in start_nodes:
-            found_in = dive(start_node, instructions, transitions, min_steps, max_steps)
-            if found_in < 0:
-                max_steps = max(max_steps + 1, min_steps)
-                break
-            if result == 0:
-                result = found_in
-            if found_in > result:
-                result = found_in
-                min_steps = found_in
-                break
-            max_steps = max(max_steps + 1, min_steps)
-        else:
-            break
+    for start_node in start_nodes:
+        found_in = dive(start_node, instructions, transitions, min_steps)
+        result.append(found_in)
 
-    print(result)
+    print(lcm_of_iterable(result))
 
 
-def dive(start, instructions, transitions, min_steps, max_steps):
+def dive(start, instructions, transitions, min_steps):
     steps = 0
     current = start
     while True:
-        if steps > max_steps:
-            return -1
-        if steps >= min_steps and current[-1] == 'Z':
+        if current[-1] == 'Z':
             return steps
         direction = instructions[steps % len(instructions)]
         current = transitions[current][get_index(direction)]
